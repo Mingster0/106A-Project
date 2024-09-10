@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+
+from my_chatter.msg import TimestampString
+
+#!/usr/bin/env python
 # The line above tells Linux that this file is a Python script, and that the OS
 # should use the Python interpreter in /usr/bin/env to run it. Don't forget to
 # use "chmod +x [filename]" to make this script executable.
@@ -13,7 +17,11 @@ from std_msgs.msg import String
 def callback(message):
 
     # Print the contents of the message to the console
-    print(rospy.get_name() + ": I heard \"%s\"" % message.data)
+
+    recieved_message = f"Message: {message.message}, Sent at: {message.time}, Recieved at: {rospy.get_time()}"
+
+    # print(rospy.get_name() + ": I heard \"%s\"" % message.data)
+    print(recieved_message)
 
 # Define the method which contains the node's main functionality
 def listener():
@@ -22,7 +30,7 @@ def listener():
     # receive messages of type std_msgs/String from the topic /chatter_talk.
     # Whenever a new message is received, the method callback() will be called
     # with the received message as its first argument.
-    rospy.Subscriber("chatter_talk", String, callback)
+    rospy.Subscriber("user_messages", TimestampString, callback)
 
     # Wait for messages to arrive on the subscribed topics, and exit the node
     # when it is killed with Ctrl+C

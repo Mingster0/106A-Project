@@ -5,6 +5,9 @@ import rospy
 from std_srvs.srv import Empty
 from turtle_patrol.srv import Patrol  # Service type
 from turtlesim.srv import TeleportAbsolute
+from turtlesim.msg import Pose
+
+import sys
 
 
 def patrol_callback(request):
@@ -12,16 +15,27 @@ def patrol_callback(request):
     rospy.wait_for_service('/turtle1/teleport_absolute')
     clear_proxy = rospy.ServiceProxy('clear', Empty)
     teleport_proxy = rospy.ServiceProxy(
-        '/turtle1/teleport_absolute',
+        f'/{args[1]}/teleport_absolute',
         TeleportAbsolute
     )
     vel = request.vel  # Linear velocity
     omega = request.omega  # Angular velocity
-    pub = rospy.Publisher(
-        '/turtle1/cmd_vel', Twist, queue_size=50)
-    cmd = Twist()
-    cmd.linear.x = vel
-    cmd.angular.z = omega
+    x = request.x
+    y = request.y
+    theta = request.theta
+    pub1 = rospy.Publisher(
+        f'/{args[1]}/cmd_vel', Twist, queue_size=50)
+    pub2 = rospy.Publisher(
+        f"/{args[1]}/pose", Pose, queue_size=50
+    )
+    cmd1 = Twist()
+    cmd1.linear.x = vel
+    cmd1.angular.z = omega
+
+    cmd2 = Pose()
+    cmd2.x = x
+    cmd2.y = y
+    cmd2.theta = theta
     # Publish to cmd_vel at 5 Hz
     rate = rospy.Rate(5)
     # Teleport to initial pose
@@ -29,16 +43,17 @@ def patrol_callback(request):
     # Clear historical path traces
     clear_proxy()
     while not rospy.is_shutdown():
-        pub.publish(cmd)  # Publish to cmd_vel
+        pub1.publish(cmd1)  # Publish to cmd_vel
+        pub2.publish(cmd2)
         rate.sleep()  # Sleep until 
     return cmd  # This line will never be reached
 
-def patrol_server():
+def patrol_server(args):
     # Initialize the server node for turtle1
-    rospy.init_node('turtle1_patrol_server')
+    rospy.init_node(f'{args[1]}_patrol_server')
     # Register service
     rospy.Service(
-        '/turtle1/patrol',  # Service name
+        f'/{args[1]}/patrol',  # Service name
         Patrol,  # Service type
         patrol_callback  # Service callback
     )
@@ -47,5 +62,8 @@ def patrol_server():
 
 
 if __name__ == '__main__':
-    patrol_server()
+
+    args = sys.argv
+
+    patrol_server(args)
 
