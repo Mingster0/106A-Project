@@ -45,6 +45,21 @@ def baxter_forward_kinematics_from_angles(joint_angles):
                     [0.7102, 0.7040, 0.0055]]).T # rotation matrix of zero config
 
     # YOUR CODE HERE (Task 1)
+    xis = np.ndarray((6, 7))
+    vs = np.ndarray((3, 7))
+
+    for i in range(7):
+        vs[0:3, i] = -np.dot(kfs.skew_3d(ws[:, i]), qs[:, i])
+
+    xis[0:3, 0:7] = vs
+    xis[3:6, 0:7] = ws
+ 
+    g0 = np.eye(4)
+    g0[0:3, 0:3] = R
+    g0[0:3, 3] = qs[:, 7]
+
+    return np.dot(kfs.prod_exp(xis, joint_angles), g0)
+
 
 def baxter_forward_kinematics_from_joint_state(joint_state):
     """
@@ -64,5 +79,11 @@ def baxter_forward_kinematics_from_joint_state(joint_state):
 
     # YOUR CODE HERE (Task 2)
 
-    # END YOUR CODE HERE
+    angles[0:2] = joint_state.position[4:6]
+    angles[2:4] = joint_state.position[2:4]
+    angles[4:7] = joint_state.position[6:9]
+
     print(baxter_forward_kinematics_from_angles(angles))
+
+    # END YOUR CODE HERE
+    

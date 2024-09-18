@@ -15,6 +15,7 @@ code by running "python kin_func_skeleton.py at the command line.
 """
 
 import numpy as np
+from scipy.linalg import expm
 
 np.set_printoptions(precision=4,suppress=True)
 
@@ -104,6 +105,10 @@ def skew_3d(omega):
     omega_hat - (3,3) ndarray: the corresponding skew symmetric matrix
     """
 
+    x, y, z = omega
+
+    return np.array([ [0, -z, y], [z, 0 ,-x], [-y, x, 0] ])
+
     # YOUR CODE HERE
 
 def rotation_3d(omega, theta):
@@ -118,7 +123,11 @@ def rotation_3d(omega, theta):
     rot - (3,3) ndarray: the resulting rotation matrix
     """
 
-    # YOUR CODE HERE
+    return np.eye(3) + skew_3d(omega) / np.linalg.norm(omega) * np.sin(np.linalg.norm(omega) * theta) + \
+    np.linalg.matrix_power(skew_3d(omega),2) / (np.linalg.norm(omega) ** 2) * (1 - np.cos(np.linalg.norm(omega)* theta))
+                                                                                                                                                                                              
+                                                                                                                                                                                              
+  # YOUR CODE HERE
 
 def hat_3d(xi):
     """
@@ -131,7 +140,13 @@ def hat_3d(xi):
     xi_hat - (4,4) ndarray: the corresponding 4x4 matrix
     """
 
-    # YOUR CODE HERE
+    v = xi[0:3]
+    omega = xi[3:6]
+
+    temp = np.hstack(((skew_3d(omega), v.reshape((3,1)))))
+
+    return np.vstack((temp, np.zeros((1, 4))))
+    # YOUR CO
 
 def homog_3d(xi, theta):
     """
@@ -146,6 +161,20 @@ def homog_3d(xi, theta):
     """
 
     # YOUR CODE HERE
+    v = xi[0:3]
+    omega = xi[3:6]
+
+    if np.linalg.norm(omega) == 0:
+        return np.vstack(np.hstack(((np.eye(3), v * theta)), np.zeros((1, 4))))
+    else:
+
+        top_left = expm(skew_3d(omega) * theta)
+        top_right = 1 / (np.linalg.norm(omega) ** 2) * (np.dot((np.eye(3) - expm(skew_3d(omega) * theta)), np.dot(skew_3d(omega), v)) 
+                                                                      + np.dot(np.outer(omega, omega), v * theta))
+
+        top = np.hstack((top_left, top_right.reshape(3, 1)))
+
+        return np.vstack((top, np.array([0.0, 0.0, 0.0, 1.0]).reshape((1, 4))))
 
 
 def prod_exp(xi, theta):
@@ -163,6 +192,8 @@ def prod_exp(xi, theta):
 
     # YOUR CODE HERE
 
+    return np.linalg.multi_dot([homog_3d(xi[..., i], theta[i]) for i in range(len(theta))])
+
 #---------------------------------TESTING CODE---------------------------------
 #-------------------------DO NOT MODIFY ANYTHING BELOW HERE--------------------
 
@@ -174,6 +205,7 @@ def array_func_test(func_name, args, ret_desired):
         print('[FAIL] ' + func_name.__name__ + '() returned an ndarray with incorrect dimensions')
     elif not np.allclose(ret_value, ret_desired, rtol=1e-3):
         print('[FAIL] ' + func_name.__name__ + '() returned an incorrect value')
+        print(ret_value - ret_desired)
     else:
         print('[PASS] ' + func_name.__name__ + '() returned the correct value!')
 
