@@ -9,6 +9,7 @@
 import rospy
 import tf2_ros
 import sys
+import numpy as np
 
 from geometry_msgs.msg import Twist
 
@@ -25,7 +26,7 @@ def controller(turtlebot_frame, goal_frame):
   ################################### YOUR CODE HERE ##############
 
   #Create a publisher and a tf buffer, which is primed with a tf listener
-  pub = rospy.Publisher('INSTERT TOPIC HERE', Twist, queue_size=10)
+  pub = rospy.Publisher("/cmd_vel", Twist, queue_size=10)
   tfBuffer = tf2_ros.Buffer()
   tfListener = tf2_ros.TransformListener(tfBuffer)
   
@@ -33,21 +34,29 @@ def controller(turtlebot_frame, goal_frame):
   # a 10Hz publishing rate
   r = rospy.Rate(10) # 10hz
 
-  K1 = 0.3
+  K1 = 0.1
   K2 = 1
   # Loop until the node is killed with Ctrl-C
   while not rospy.is_shutdown():
     try:
-      trans = tfBuffer.lookup_transform(INSERT FRAME HERE, INSERT FRAME HERE, rospy.Time())
+      trans = tfBuffer.lookup_transform(turtlebot_frame, goal_frame, rospy.Time())
 
       # Process trans to get your state error
       # Generate a control command to send to the robot
 
-      control_command = # Generate this
+      transformation = np.array([[K1, 0], [0, K2]])
+
+      control_command = transformation @ np.array([trans.transform.translation.x, trans.transform.translation.y])
+
+      print(control_command)
+
+      twist = Twist()
+      twist.linear.x = control_command[0]
+      twist.angular.z = control_command[1]
 
       #################################### end your code ###############
 
-      pub.publish(control_command)
+      pub.publish(twist)
     except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
       pass
     # Use our rate object to sleep until it is time to publish again
