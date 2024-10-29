@@ -44,16 +44,16 @@ class ObjectDetector:
 
     def camera_info_callback(self, msg):
         # TODO: Extract the intrinsic parameters from the CameraInfo message (look this message type up online)
-        self.fx = ...
-        self.fy = ...
-        self.cx = ...
-        self.cy = ...
+        self.fx = msg.K[0]
+        self.fy = msg.K[4]
+        self.cx = msg.K[2]
+        self.cy = msg.K[5]
 
     def pixel_to_point(self, u, v, depth):
         # TODO: Use the camera intrinsics to convert pixel coordinates to real-world coordinates
-        X = ...
-        Y = ...
-        Z = ...
+        X = (u - self.cx) * depth / self.fx
+        Y = (v - self.cy) * depth / self.fy
+        Z = depth
         return X, Y, Z
 
     def color_image_callback(self, msg):
@@ -83,16 +83,17 @@ class ObjectDetector:
         # Run `python hsv_color_thresholder.py` and tune the bounds so you only see your cup
         # update lower_hsv and upper_hsv directly
 
-        lower_hsv = np.array(...) # TODO: Define lower HSV values for cup color
-        upper_hsv = np.array(...) # TODO: Define upper HSV values for cup color
+        lower_hsv = np.array([71, 102, 75]) # TODO: Define lower HSV values for cup color
+        upper_hsv = np.array([91, 255, 255]) # TODO: Define upper HSV values for cup color
 
         # TODO: Threshold the image to get only cup colors
         # HINT: Lookup cv2.inRange()
-        mask = ...
+        mask = cv2.inRange(hsv,lower_hsv,upper_hsv)
+
 
         # TODO: Get the coordinates of the cup points on the mask
         # HINT: Lookup np.nonzero()
-        y_coords, x_coords = ...
+        y_coords, x_coords = np.nonzero(mask)
 
         # If there are no detected points, exit
         if len(x_coords) == 0 or len(y_coords) == 0:

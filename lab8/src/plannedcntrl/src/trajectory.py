@@ -36,7 +36,8 @@ def plot_trajectory(waypoints):
 
 def bezier_curve(p0, p1, p2, p3, t):
     """Calculate a point on a cubic Bezier curve defined by p0, p1, p2, and p3 at parameter t."""
-    return ## TODO
+    bez = (1-t)**3*p0+3*(1-t)**2*t*p1+3*(1-t)*t**2*p2+t**3*p3
+    return bez
 
 def generate_bezier_waypoints(x1, y1, theta1, x2, y2, theta2, offset=1.0, num_points=10):
     # 1. Calculate direction vector based on yaw
@@ -73,11 +74,12 @@ def plan_curved_trajectory(target_position):
     Returns:
     - A list of waypoints [(x, y, theta), ...] where type can be 'rotate' or 'move' and value is the amount to rotate in radians or move in meters.
     """
-    tfBuffer = ## TODO: initialize a buffer
-    tfListener = ## TODO: initialize a transform listener
+    tfBuffer = tf2_ros.Buffer() ## TODO: initialize a buffer
+    tfListener = tf2_ros.TransformListener(tfBuffer) ## TODO: initialize a transform listener
     while not rospy.is_shutdown():
         try:
-            trans = ## TODO: apply a lookup transform between our world frame and turtlebot frame
+            print('HELLO')
+            trans =  tfBuffer.lookup_transform('camera_link', 'base_footprint', rospy.Time(0), rospy.Duration(1.0)) ## TODO: apply a lookup transform between our world frame and turtlebot frame
             print(trans)
             break
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
@@ -89,8 +91,8 @@ def plan_curved_trajectory(target_position):
             trans.transform.rotation.z, trans.transform.rotation.w])
     
     
-    x2 = ## TODO: how would you get x2 from our target position? remember this is relative to x1 
-    y2 = ## TODO: how would you get x2 from our target position? remember this is relative to x1 
+    x2 = target_position[0] - x1 ## TODO: how would you get x2 from our target position? remember this is relative to x1 
+    y2 = target_position[1] - y1 ## TODO: how would you get x2 from our target position? remember this is relative to x1 
 
     waypoints = generate_bezier_waypoints(x1, y1, yaw, x2, y2, yaw, offset=0.2, num_points=10)
     plot_trajectory(waypoints)
