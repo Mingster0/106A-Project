@@ -11,11 +11,12 @@ def fk_service_client():
     fk_service_proxy = rospy.ServiceProxy(service_name, SolvePositionFK)
     fk_request = SolvePositionFKRequest()
     joints = JointState()
-    # YOUR CODE HERE
     joints.name = ['right_j0', 'right_j1', 'right_j2', 'right_j3','right_j4', 'right_j5', 'right_j6']
+    # YOUR CODE HERE
     joint_input = []
-    joints.position = joint_input
+    
     # Add desired pose for forward kinematics
+    joints.position = joint_input
     fk_request.configuration.append(joints)
     # Request forward kinematics from base to "right_hand" link
     fk_request.tip_names.append('right_hand')

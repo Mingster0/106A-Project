@@ -28,7 +28,8 @@ def controller(waypoint):
 
   # Create a publisher and a tf buffer, which is primed with a tf listener
   pub = ## TODO: what topic should we publish to? how?
-  tfBuffer = ## TODO: initialize a buffer
+  tfBuffer = ... ## TODO: initialize a buffer
+  tfListener = ## TODO: initialize a transform listener
 
   # Create a timer object that will sleep long enough to result in
   # a 10Hz publishing rate
@@ -38,7 +39,7 @@ def controller(waypoint):
   # All in the form [x, y]
   # NOTE: The Turtlebot typically does not need an integral term so we set it to 0 to make this a PD controller
   Kp = np.diag([2, 0.8]) # TODO: You may need to tune these values for your turtlebot
-  Kd = np.diag([0.5, 0.5]) # TODO: You may need to tune these values for your turtlebot
+  Kd = np.diag([-0.5, 0.5]) # TODO: You may need to tune these values for your turtlebot
   Ki = np.diag([0, 0])
 
   prev_time = # TODO: initialize your time, what rospy function would be helpful here?
