@@ -59,7 +59,7 @@ def controller(waypoint):
             trans_odom_to_base_link.transform.rotation.z, trans_odom_to_base_link.transform.rotation.w])
 
 
-      waypoint_trans = TransformStamped() # TODO: initialize a PoseStamped
+      waypoint_trans = PoseStamped() # TODO: initialize a PoseStamped
       waypoint_trans.pose.position.x = waypoint[0] # TODO: what value would you use here?
       waypoint_trans.pose.position.y = waypoint[1] # TODO: what value would you use here?
       waypoint_trans.pose.position.z = 0 # TODO: what value would you use here?  # Assuming the waypoint is on the ground
@@ -87,8 +87,7 @@ def controller(waypoint):
       # Generate a control command to send to the robot
       x_error = waypoint_in_base_link.pose.position.x
 
-      y_error = waypoint_in_base_link.pose.position.y # TODO: (WE WROTE THIS LINE)
-      error = np.array([x_error, y_error])# TODO: what are two values that we can use for this np.array, and what are the dimensions
+      error = np.array([x_error, yaw])# TODO: what are two values that we can use for this np.array, and what are the dimensions
       
       # proportional term
       proportional = np.dot(Kp, error).squeeze()

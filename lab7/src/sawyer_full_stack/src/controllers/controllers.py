@@ -398,7 +398,7 @@ class FeedforwardJointVelocityController(Controller):
         target_acceleration: 7x' ndarray of desired accelerations
         """
         # TODO: Implement Feedforward control
-        controller_velocity = ...
+        controller_velocity = target_velocity
 
         self._limb.set_joint_velocities(joint_array_to_dict(controller_velocity, self._limb))
 
