@@ -79,7 +79,7 @@ def plan_curved_trajectory(target_position):
     while not rospy.is_shutdown():
         try:
             print('HELLO')
-            trans =  tfBuffer.lookup_transform('camera_link', 'base_footprint', rospy.Time(0), rospy.Duration(1.0)) ## TODO: apply a lookup transform between our world frame and turtlebot frame
+            trans =  tfBuffer.lookup_transform('odom', 'base_footprint', rospy.Time(0), rospy.Duration(1.0)) ## TODO: apply a lookup transform between our world frame and turtlebot frame
             print(trans)
             break
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
@@ -91,8 +91,8 @@ def plan_curved_trajectory(target_position):
             trans.transform.rotation.z, trans.transform.rotation.w])
     
     
-    x2 = target_position[0] - x1 ## TODO: how would you get x2 from our target position? remember this is relative to x1 
-    y2 = target_position[1] - y1 ## TODO: how would you get x2 from our target position? remember this is relative to x1 
+    x2 = target_position[0] * np.cos(yaw) - target_position[0] * np.sin(yaw) + x1 ## TODO: how would you get x2 from our target position? remember this is relative to x1 
+    y2 = target_position[1] * np.cos(yaw) + target_position[1] * np.sin(yaw) + y1 ## TODO: how would you get x2 from our target position? remember this is relative to x1 
 
     waypoints = generate_bezier_waypoints(x1, y1, yaw, x2, y2, yaw, offset=0.2, num_points=10)
     plot_trajectory(waypoints)
