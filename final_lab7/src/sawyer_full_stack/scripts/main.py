@@ -76,6 +76,49 @@ def lookup_tag(tag_number):
     tag_pos = [getattr(trans.transform.translation, dim) for dim in ('x', 'y', 'z')]
     return np.array(tag_pos)
 
+def publish_board_surface(tag_positions, marker_pub):
+    """
+    Publish a marker to visualize the drawing board surface in RViz.
+
+    Parameters
+    ----------
+    tag_positions : dict
+        Positions of the AR tags (bottom_left, top_left, bottom_right).
+    marker_pub : rospy.Publisher
+        Publisher for RViz markers.
+    """
+    bottom_left = tag_positions['bottom_left']
+    top_left = tag_positions['top_left']
+    bottom_right = tag_positions['bottom_right']
+    top_right = bottom_right + (top_left - bottom_left)
+
+    # Create a Marker for the surface
+    marker = Marker()
+    marker.header.frame_id = "base"
+    marker.header.stamp = rospy.Time.now()
+    marker.ns = "drawing_board_surface"
+    marker.id = 1
+    marker.type = Marker.TRIANGLE_LIST
+    marker.action = Marker.ADD
+    marker.scale.x = 1.0
+    marker.color.r = 0.0
+    marker.color.g = 0.0
+    marker.color.b = 1.0
+    marker.color.a = 0.5  # Transparent surface
+
+    # Define the two triangles
+    for triangle in [
+        [bottom_left, bottom_right, top_left],
+        [top_left, bottom_right, top_right],
+    ]:
+        for vertex in triangle:
+            p = Point()
+            p.x, p.y, p.z = vertex
+            marker.points.append(p)
+
+    # Publish the marker
+    marker_pub.publish(marker)
+
 def get_trajectory(limb, kin, ik_solver, tag_pos, args):
     """
     Returns an appropriate robot trajectory for the specified task.  You should 
@@ -96,6 +139,29 @@ def get_trajectory(limb, kin, ik_solver, tag_pos, args):
 
     tfBuffer = tf2_ros.Buffer()
     listener = tf2_ros.TransformListener(tfBuffer)
+
+    tag_positions = {
+        'bottom_left': tag_pos[0],
+        'top_left': tag_pos[1],
+        'bottom_right': tag_pos[2],
+    }
+
+    # Calculate drawing plane properties
+    bottom_left = tag_positions['bottom_left']
+    top_left = tag_positions['top_left']
+    bottom_right = tag_positions['bottom_right']
+
+    # Define the transformation matrix from drawing plane to robot base frame
+    plane_origin = bottom_left
+    plane_x_axis = (bottom_right - bottom_left) / np.linalg.norm(bottom_right - bottom_left)
+    plane_y_axis = (top_left - bottom_left) / np.linalg.norm(top_left - bottom_left)
+    plane_z_axis = np.cross(plane_x_axis, plane_y_axis)
+
+    transform_matrix = np.eye(4)
+    transform_matrix[:3, 0] = plane_x_axis
+    transform_matrix[:3, 1] = plane_y_axis
+    transform_matrix[:3, 2] = plane_z_axis
+    transform_matrix[:3, 3] = plane_origin
 
     try:
         trans = tfBuffer.lookup_transform('base', 'right_hand', rospy.Time(0), rospy.Duration(10.0))
@@ -214,6 +280,26 @@ def main():
     # is a jointspace or torque controller, it should return a trajectory where the positions
     # and velocities are the positions and velocities of each joint.
     robot_trajectory = get_trajectory(limb, kin, ik_solver, tag_pos, args)
+
+    rospy.init_node("ar_tag_board_visualizer")
+
+    # Marker publisher for RViz
+    marker_pub = rospy.Publisher("/visualization_marker", Marker, queue_size=10)
+
+    # Lookup AR tag positions
+    tag_pos = [lookup_tag(int(marker)) for marker in args.ar_marker]
+    if None in tag_pos:
+        rospy.logerr("Failed to retrieve AR tag positions.")
+        sys.exit()
+
+    tag_positions = {
+        'bottom_left': tag_pos[0],
+        'top_left': tag_pos[1],
+        'bottom_right': tag_pos[2],
+    }
+
+    # Publish the board marker
+    publish_board_marker(tag_positions, marker_pub)
 
     # This is a wrapper around MoveIt! for you to use.  We use MoveIt! to go to the start position
     # of the trajectory
