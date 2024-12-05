@@ -148,8 +148,10 @@ class OccupancyGrid2d(object):
             elif np.isnan(r):
                 continue
 
-            # Get angle of this ray in fixed frame.
-            # TODO!
+           
+            ray_angle = msg.angle_min + idx * msg.angle_increment
+
+            ray_angle_fixed = ray_angle + yaw
 
             # Throw out this point if it is too close or too far away.
             if r > msg.range_max:
@@ -165,7 +167,20 @@ class OccupancyGrid2d(object):
             # Update log-odds at each voxel along the way.
             # Only update each voxel once. 
             # The occupancy grid is stored in self._map
-            # TODO!
+            
+            
+            step_size = np.sqrt(self._x_res**2 + self._y_res**2)
+
+            for t in np.arange(0, r, step_size):
+                x = sensor_x + t * np.cos(ray_angle_fixed)
+                y = sensor_y + t * np.sin(ray_angle_fixed)
+
+                voxel_x, voxel_y = self.PointToVoxel(x, y)
+
+                if t + step_size >= r:
+                    self._map[voxel_x, voxel_y] = min(self._map[voxel_x, voxel_y] + self._occupied_update, self._occupied_threshold)
+                else:
+                    self._map[voxel_x, voxel_y] = max(self._map[voxel_x, voxel_y] + self._free_update, self._free_threshold)
 
         # Visualize.
         self.Visualize()
