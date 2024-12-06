@@ -79,7 +79,7 @@ class Controller:
         current_index : int
             waypoint index from which to start search
 
-        Returns
+        ReturnsSSS
         -------
         target_position : 7x' or 6x' :obj:`numpy.ndarray` 
             desired positions
