@@ -212,7 +212,7 @@ class ImageTrajectory(Trajectory):
     def __init__(self, waypoints, total_time):
         Trajectory.__init__(self, total_time)
         super().__init__(total_time)
-        self.waypoints = waypoints/500
+        self.waypoints = waypoints
         self.total_time = total_time
         self.segment_time = total_time / (len(waypoints) - 1)
         self.desired_orientation = np.array([0, 1, 0, 0])

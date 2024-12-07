@@ -26,6 +26,8 @@ import tf2_ros
 import intera_interface
 from moveit_msgs.msg import DisplayTrajectory, RobotState
 from sawyer_pykdl import sawyer_kinematics
+from visualization_msgs.msg import Marker
+from geometry_msgs.msg import Point
 
 
 def tuck():
@@ -42,6 +44,60 @@ def tuck():
         launch.start()
     else:
         print('Canceled. Not tucking the arm.')
+
+# def publish_board_marker(tag_positions, marker_pub):
+
+#     """
+#     Publish a marker to visualize the drawing board in RViz.
+
+#     Parameters
+#     ----------
+#     tag_positions : dict
+#         Positions of the AR tags (bottom_left, top_left, bottom_right).
+
+#     marker_pub : rospy.Publisher
+#         Publisher for RViz markers.
+
+#     """
+
+#     bottom_left = tag_positions['bottom_left']
+#     top_left = tag_positions['top_left']
+#     bottom_right = tag_positions['bottom_right']
+    
+#     # Calculate the fourth corner (top_right)
+#     top_right = bottom_right + (top_left - bottom_left)
+    
+#     # Define the corners of the board
+#     corners = [bottom_left, bottom_right, top_right, top_left]
+    
+#     # Create a Marker for the board
+#     marker = Marker()
+#     marker.header.frame_id = "base"
+#     marker.header.stamp = rospy.Time.now()
+
+#     marker.ns = "drawing_board"
+#     marker.id = 0
+#     marker.type = Marker.LINE_STRIP
+#     marker.action = Marker.ADD
+#     marker.scale.x = 0.01  # Line width
+#     marker.color.r = 0.0
+#     marker.color.g = 1.0
+#     marker.color.b = 0.0
+#     marker.color.a = 1.0
+
+#     # Add the corners to the marker
+#     for corner in corners:
+#         p = Point()
+#         p.x, p.y, p.z = corner
+#         marker.points.append(p)
+
+#     # Close the rectangle by connecting the last point to the first
+#     p = Point()
+#     p.x, p.y, p.z = corners[0]
+#     marker.points.append(p)
+
+#     # Publish the marker
+#     marker_pub.publish(marker)
 
 def lookup_tag(tag_number):
     """
@@ -103,6 +159,30 @@ def get_trajectory(limb, kin, ik_solver, tag_pos, args):
     except Exception as e:
         print(e)
 
+    # AR Tag Positions
+
+    tag_positions = {
+        'bottom_left': tag_pos[0],
+        'top_left': tag_pos[1],
+        'bottom_right': tag_pos[2],
+    }
+
+    # Calculate drawing plane properties
+
+    bottom_left = tag_positions['bottom_left']
+    top_left = tag_positions['top_left']
+    bottom_right = tag_positions['bottom_right']
+
+    # Define the transformation matrix from drawing plane to robot base frame
+    print(f'bottom_left: ', bottom_left)
+
+    plane_origin = bottom_left
+    x_bound = abs(bottom_right[0] - bottom_left[0])
+    y_bound = abs(top_left[1] - bottom_left[1])
+
+
+    print(plane_origin, x_bound, y_bound)
+
     current_position = np.array([getattr(trans.transform.translation, dim) for dim in ('x', 'y', 'z')])
     print("Current Position:", current_position)
 
@@ -120,11 +200,12 @@ def get_trajectory(limb, kin, ik_solver, tag_pos, args):
         #TODO fact check this section
 
         target_pos = tag_pos[0]
-        target_pos[2] += 0.4 #linear path moves to a Z position above AR Tag.
+        target_pos[2] += 500 #linear path moves to a Z position above AR Tag.
         print("TARGET POSITION:", target_pos)
         img = ImagePath(10, args.img)
         waypoints = img.parse_svg_to_waypoints()
-        trajectory = ImageTrajectory(waypoints, total_time=30)
+        scaled_waypoints = img.scale_and_center_waypoints(waypoints, plane_origin, x_bound, y_bound) #have to check if this works
+        trajectory = ImageTrajectory(scaled_waypoints, total_time=30)
         trajectory.display_trajectory()
 
         #CHECKED UP TO HERE AS OF 12/06/24
@@ -218,6 +299,8 @@ def main():
 
     # Lookup the AR tag position.
     #TODO: Lookup for 3 markers, specifying which one is at a corner
+   
+
     tag_pos = [lookup_tag(marker) for marker in args.ar_marker]
 
     # Get an appropriate RobotTrajectory for the task (circular, linear, or square)

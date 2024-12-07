@@ -30,12 +30,12 @@ class ImagePath():
 
         return np.array(all_points)
 
-    def load_svg(file_path):
+    def load_svg(self, file_path):
         """Load paths from an SVG file."""
         paths, _ = svg2paths(file_path)
         return paths
 
-    def simplify_path(path, num_points=500):
+    def simplify_path(self, path, num_points=500):
         """Approximate SVG path with a high-resolution polyline."""
         points = []
         for i in np.linspace(0, 1, num_points):
@@ -44,7 +44,7 @@ class ImagePath():
         return points
 
 
-    def parametrize_path(points):
+    def parametrize_path(self, points):
         """Convert a set of points to parametric equations x(t) and y(t)."""
         t = np.linspace(0, 1, len(points))
         x = points[:, 0]
@@ -57,19 +57,19 @@ class ImagePath():
         return x_spline, y_spline
 
 
-    def generate_parametric_function(paths):
+    def generate_parametric_function(self, paths):
         """Generate parametric functions for SVG paths."""
         parametric_functions = []
 
         for path in paths:
-            points = simplify_path(path)
-            x_spline, y_spline = parametrize_path(points)
+            points = self.simplify_path(path)
+            x_spline, y_spline = self.parametrize_path(points)
             parametric_functions.append((x_spline, y_spline))
 
         return parametric_functions
 
 
-    def plot_parametric_function_with_equations(functions, num_points=1000):
+    def plot_parametric_function_with_equations(self, functions, num_points=1000):
         """Plot the mathematical functions representation of the SVG with equations."""
         plt.figure(figsize=(12, 12))
         
@@ -111,7 +111,7 @@ class ImagePath():
         plt.show()
 
 
-    def save_parametric_svg(functions, output_path="output_parametric.svg", num_points=1000):
+    def save_parametric_svg(self, functions, output_path="output_parametric.svg", num_points=1000):
         """Save the parametric representation as an SVG."""
         svg_content = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1">\n'
         
@@ -133,6 +133,50 @@ class ImagePath():
         paths = self.load_svg(self.file_path)
         parametric_funcs = self.generate_parametric_function(paths)
         return parametric_funcs
+    
+    def scale_and_center_waypoints(self, waypoints, board_origin, board_width, board_height):
+        """
+        Scale and center waypoints based on the board dimensions.
+
+        Parameters
+        ----------
+        waypoints : numpy.ndarray
+            Array of 3D waypoints from the SVG file.
+        board_origin : numpy.ndarray
+            Origin of the board in the robot's base frame.
+        board_width : float
+            Width of the board in meters.
+        board_height : float
+            Height of the board in meters.
+
+        Returns
+        -------
+        numpy.ndarray
+            Scaled and translated waypoints.
+        """
+        # Compute SVG bounding box
+        min_x, min_y = waypoints[:, 0].min(), waypoints[:, 1].min()
+        max_x, max_y = waypoints[:, 0].max(), waypoints[:, 1].max()
+
+        svg_width = max_x - min_x
+        svg_height = max_y - min_y
+
+        # Compute scaling factor
+        scale_factor = min(board_width / svg_width, board_height / svg_height)
+
+        # Scale waypoints
+        scaled_waypoints = waypoints.copy()
+        scaled_waypoints[:, 0] = (waypoints[:, 0] - min_x) * scale_factor
+        scaled_waypoints[:, 1] = (waypoints[:, 1] - min_y) * scale_factor
+
+        # Center the waypoints on the board
+        offset_x = board_origin[0] + (board_width - (scaled_waypoints[:, 0].max() - scaled_waypoints[:, 0].min())) / 2
+        offset_y = board_origin[1] + (board_height - (scaled_waypoints[:, 1].max() - scaled_waypoints[:, 1].min())) / 2
+
+        scaled_waypoints[:, 0] += offset_x
+        scaled_waypoints[:, 1] += offset_y
+
+        return scaled_waypoints
         
     # def get_path():
     # IGNORE THESE COMMENTS FOR NOW (Option for other parametric representation of path)
