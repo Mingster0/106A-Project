@@ -122,7 +122,7 @@ class MotionPath:
 
     def trajectory_point(self, t, jointspace):
         """
-        takes a discrete point in time, and puts the position, velocity, and
+        takes a discrete point in 58,time, and puts the position, velocity, and
         acceleration into a ROS JointTrajectoryPoint() to be put into a 
         RobotTrajectory.  
         
@@ -148,7 +148,9 @@ class MotionPath:
         point = JointTrajectoryPoint()
         delta_t = .01
         if jointspace:
-            theta_t_2 = self.ik_service_client(self.trajectory.target_pose(max(t-2*delta_t, 0)))            
+            theta_t_2 = self.ik_service_client(self.trajectory.target_pose(max(t-2*delta_t, 0)))     
+            #TODO: this returns none for some reasone and errors from main.py
+            breakpoint()       
             theta_t_1 = self.ik_service_client(self.trajectory.target_pose(max(t-delta_t, 0)))
             theta_t   = self.ik_service_client(self.trajectory.target_pose(t))
             

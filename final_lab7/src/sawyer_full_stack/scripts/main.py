@@ -11,6 +11,7 @@ import roslaunch
 
 from paths.trajectories import LinearTrajectory, CircularTrajectory, ImageTrajectory
 from paths.paths import MotionPath
+from paths.image_path import ImagePath
 from paths.path_planner import PathPlanner
 from controllers.controllers import ( 
     PIDJointVelocityController, 
@@ -123,10 +124,14 @@ def get_trajectory(limb, kin, ik_solver, tag_pos, args):
         print("TARGET POSITION:", target_pos)
         img = ImagePath(10, args.img)
         waypoints = img.parse_svg_to_waypoints()
-        trajectory = ImageTrajectory(waypoints, total_time=10)
+        trajectory = ImageTrajectory(waypoints, total_time=30)
+        trajectory.display_trajectory()
+
+        #CHECKED UP TO HERE AS OF 12/06/24
     else:
         raise ValueError('task {} not recognized'.format(task))
     
+    #TODO: resolve this error (how to return a path, given the Image trajectory)
     path = MotionPath(limb, kin, ik_solver, trajectory)
     return path.to_robot_trajectory(num_way, True)
 
@@ -143,7 +148,7 @@ def get_controller(controller_name, limb, kin):
     :obj:`Controller`
     """
     if controller_name == 'open_loop':
-        controller = FeedforwardJointVelocityController(limb, kin)LinearTrajectory
+        controller = FeedforwardJointVelocityController(limb, kin)
     elif controller_name == 'pid':
         Kp = 0.2 * np.array([0.4, 2, 1.7, 1.5, 2, 2, 3])
         Kd = 0.01 * np.array([2, 1, 2, 0.5, 0.8, 0.8, 0.8])
@@ -187,12 +192,12 @@ def main():
     parser.add_argument('-num_way', type=int, default=50, help=
         'How many waypoints for the :obj:`moveit_msgs.msg.RobotTrajectory`.  Default: 300'
     )
+    parser.add_argument('-img', type=str, default=None, help="path to SVG file.")
+
     parser.add_argument('--log', action='store_true', help='plots controller performance')
     args = parser.parse_args()
 
     #TODO VERIFY ADD ARGUMENT IS CORRECT
-    parser.add_argument('-img', typ=str, default=None, help="path to SVG file.")
-    args = parser.parse_args()
 
 
     rospy.init_node('moveit_node')
@@ -205,12 +210,14 @@ def main():
     kin = sawyer_kinematics("right")
 
     # verify that image path exists'
+    #TODO: implement correct one that passes this if there is no arg sent to img_path
     img_path = args.img
     if img_path is None:
-        print("path is not valid.")
-        sys.exit()
+        print("path argument check")
+        # sys.exit()
 
     # Lookup the AR tag position.
+    #TODO: Lookup for 3 markers, specifying which one is at a corner
     tag_pos = [lookup_tag(marker) for marker in args.ar_marker]
 
     # Get an appropriate RobotTrajectory for the task (circular, linear, or square)

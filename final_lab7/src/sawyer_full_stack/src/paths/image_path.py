@@ -18,7 +18,7 @@ class ImagePath():
         self.file_path = file_path
 
     
-    def parse_svg_to_waypoints(num_waypoints=150):
+    def parse_svg_to_waypoints(self, num_waypoints=150):
         #returns a np.array of waypoints, all you need so far for linear approximation method
         paths, _ = svg2paths(self.file_path)
         all_points = []

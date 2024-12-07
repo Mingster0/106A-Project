@@ -179,7 +179,7 @@ class CircularTrajectory(Trajectory):
         transformations.
 
         Parameters
-        ----------
+        ----------128,
         time : float
 
         Returns
@@ -210,10 +210,12 @@ class ImageTrajectory(Trajectory):
     """"Trajectory for a given SVG image.
     """
     def __init__(self, waypoints, total_time):
+        Trajectory.__init__(self, total_time)
         super().__init__(total_time)
-        self.waypoints = waypoints
+        self.waypoints = waypoints/500
         self.total_time = total_time
         self.segment_time = total_time / (len(waypoints) - 1)
+        self.desired_orientation = np.array([0, 1, 0, 0])
 
     def target_pose(self, time):
         segment_index = int(time // self.segment_time)
@@ -225,7 +227,7 @@ class ImageTrajectory(Trajectory):
         local_time = time % self.segment_time
         alpha = local_time / self.segment_time
         pos = (1 - alpha) * start + alpha * end
-        return np.hstack((pos, [0, 1, 0, 0]))
+        return np.hstack((pos, self.desired_orientation))
 
     def target_velocity(self, time):
         segment_index = int(time // self.segment_time)
