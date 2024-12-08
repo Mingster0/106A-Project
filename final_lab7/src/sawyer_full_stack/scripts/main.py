@@ -29,6 +29,9 @@ from sawyer_pykdl import sawyer_kinematics
 from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Point
 
+# Terminal Notes
+# python main.py -task line -ar_marker 3 2 8 -img nike_logo.svg --log
+
 
 def tuck():
     """
@@ -195,7 +198,7 @@ def get_trajectory(limb, kin, ik_solver, tag_pos, args):
         target_pos = tag_pos[0]
         target_pos[2] += 0.5
         print("TARGET POSITION:", target_pos)
-        trajectory = CircularTrajectory(center_position=target_pos, radius=0.1, total_time=15)
+        trajectory = CircularTrajectory(center_position=target_pos, radius=0.1, total_time=20)
     elif task == 'image':
         #TODO fact check this section
 
@@ -205,7 +208,7 @@ def get_trajectory(limb, kin, ik_solver, tag_pos, args):
         img = ImagePath(10, args.img)
         waypoints = img.parse_svg_to_waypoints()
         scaled_waypoints = img.scale_and_center_waypoints(waypoints, plane_origin, x_bound, y_bound) #have to check if this works
-        trajectory = ImageTrajectory(scaled_waypoints, total_time=30)
+        trajectory = ImageTrajectory(scaled_waypoints, total_time=15)
         trajectory.display_trajectory()
 
         #CHECKED UP TO HERE AS OF 12/06/24
