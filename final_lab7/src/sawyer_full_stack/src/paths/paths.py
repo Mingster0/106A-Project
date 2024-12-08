@@ -150,10 +150,10 @@ class MotionPath:
         if jointspace:
             theta_t_2 = self.ik_service_client(self.trajectory.target_pose(max(t-2*delta_t, 0)))     
             #TODO: this returns none for some reasone and errors from main.py
-            breakpoint()       
             theta_t_1 = self.ik_service_client(self.trajectory.target_pose(max(t-delta_t, 0)))
             theta_t   = self.ik_service_client(self.trajectory.target_pose(t))
-            
+            rospy.wait_for_service("ExternalTools/right/PositionKinematicsNode/IKService", 10.0)
+    
             # we said you shouldn't simply take a finite difference when creating
             # the path, why do you think we're doing that here?
             point.positions = theta_t

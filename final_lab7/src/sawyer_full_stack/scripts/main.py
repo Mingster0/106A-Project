@@ -173,8 +173,11 @@ def get_trajectory(limb, kin, ik_solver, tag_pos, args):
     # Calculate drawing plane properties
 
     bottom_left = tag_positions['bottom_left']
+    bottom_left[2] = 0
     top_left = tag_positions['top_left']
+    top_left[2] = 0
     bottom_right = tag_positions['bottom_right']
+    bottom_right[2] = 0
 
     # Define the transformation matrix from drawing plane to robot base frame
     print(f'bottom_left: ', bottom_left)
@@ -203,12 +206,12 @@ def get_trajectory(limb, kin, ik_solver, tag_pos, args):
         #TODO fact check this section
 
         target_pos = tag_pos[0]
-        target_pos[2] += 500 #linear path moves to a Z position above AR Tag.
+        target_pos[2] += 0.4 #linear path moves to a Z position above AR Tag.
         print("TARGET POSITION:", target_pos)
         img = ImagePath(10, args.img)
         waypoints = img.parse_svg_to_waypoints()
         scaled_waypoints = img.scale_and_center_waypoints(waypoints, plane_origin, x_bound, y_bound) #have to check if this works
-        trajectory = ImageTrajectory(scaled_waypoints, total_time=15)
+        trajectory = ImageTrajectory(scaled_waypoints, total_time=30)
         trajectory.display_trajectory()
 
         #CHECKED UP TO HERE AS OF 12/06/24

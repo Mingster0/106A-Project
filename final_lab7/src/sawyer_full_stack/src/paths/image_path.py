@@ -18,7 +18,7 @@ class ImagePath():
         self.file_path = file_path
 
     
-    def parse_svg_to_waypoints(self, num_waypoints=150):
+    def parse_svg_to_waypoints(self, num_waypoints= 150):
         #returns a np.array of waypoints, all you need so far for linear approximation method
         paths, _ = svg2paths(self.file_path)
         all_points = []
@@ -26,7 +26,7 @@ class ImagePath():
         for path in paths:
             for i in np.linspace(0, 1, num_waypoints // len(paths)):
                 point = path.point(i)
-                all_points.append([point.real, point.imag, 0])  # Add z=0 for 2D shapes
+                all_points.append([point.real, point.imag, 0.1])  # Add z= 0 for 2D shapes
 
         return np.array(all_points)
 
@@ -163,19 +163,20 @@ class ImagePath():
 
         # Compute scaling factor
         scale_factor = min(board_width / svg_width, board_height / svg_height)
-
+        scale_factor = 0.0007 
+        #TODO: rescale correctly
         # Scale waypoints
         scaled_waypoints = waypoints.copy()
         scaled_waypoints[:, 0] = (waypoints[:, 0] - min_x) * scale_factor
         scaled_waypoints[:, 1] = (waypoints[:, 1] - min_y) * scale_factor
-
+        scaled_waypoints[:, 2] = 0.01 #1 cm above surface
         # Center the waypoints on the board
         offset_x = board_origin[0] + (board_width - (scaled_waypoints[:, 0].max() - scaled_waypoints[:, 0].min())) / 2
-        offset_y = board_origin[1] + (board_height - (scaled_waypoints[:, 1].max() - scaled_waypoints[:, 1].min())) / 2
+        offset_y = board_origin[1] - (board_height - (scaled_waypoints[:, 1].max() - scaled_waypoints[:, 1].min())) / 2
 
         scaled_waypoints[:, 0] += offset_x
         scaled_waypoints[:, 1] += offset_y
-
+        breakpoint()
         return scaled_waypoints
         
     # def get_path():
