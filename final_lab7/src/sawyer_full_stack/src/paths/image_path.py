@@ -27,7 +27,14 @@ class ImagePath():
             for i in np.linspace(0, 1, num_waypoints // len(paths)):
                 point = path.point(i)
                 all_points.append([point.real, point.imag, 0.1])  # Add z= 0 for 2D shapes
-
+        breakpoint()
+        # Rotating SVG image to match base frame
+        for w in all_points:
+            temp_x = w[0]
+            temp_y = w[1]
+            w[1] = -1*temp_x
+            w[0] = temp_y
+        breakpoint()
         return np.array(all_points)
 
     def load_svg(self, file_path):
@@ -134,7 +141,7 @@ class ImagePath():
         parametric_funcs = self.generate_parametric_function(paths)
         return parametric_funcs
     
-    def scale_and_center_waypoints(self, waypoints, board_origin, board_width, board_height):
+    def scale_and_center_waypoints(self, waypoints, board_origin, board_height, board_width):
         """
         Scale and center waypoints based on the board dimensions.
 
@@ -154,26 +161,28 @@ class ImagePath():
         numpy.ndarray
             Scaled and translated waypoints.
         """
-        # Compute SVG bounding box
+        # Compute SVG bounding box(bottom_left
         min_x, min_y = waypoints[:, 0].min(), waypoints[:, 1].min()
         max_x, max_y = waypoints[:, 0].max(), waypoints[:, 1].max()
 
-        svg_width = max_x - min_x
-        svg_height = max_y - min_y
+        svg_rel_height = max_x - min_x
+        svg_rel_width = max_y - min_y
 
         # Compute scaling factor
-        scale_factor = min(board_width / svg_width, board_height / svg_height)
-        scale_factor = 0.0007 
+        scale_factor = min(board_height / svg_rel_height, board_width / svg_rel_width)
         #TODO: rescale correctly
         # Scale waypoints
         scaled_waypoints = waypoints.copy()
         scaled_waypoints[:, 0] = (waypoints[:, 0] - min_x) * scale_factor
         scaled_waypoints[:, 1] = (waypoints[:, 1] - min_y) * scale_factor
         scaled_waypoints[:, 2] = 0.01 #1 cm above surface
-        # Center the waypoints on the board
-        offset_x = board_origin[0] + (board_width - (scaled_waypoints[:, 0].max() - scaled_waypoints[:, 0].min())) / 2
-        offset_y = board_origin[1] - (board_height - (scaled_waypoints[:, 1].max() - scaled_waypoints[:, 1].min())) / 2
 
+        # Center the waypoints on the board
+        #note: x is the height of the image, y refers to width of image direction
+        shift_x = (board_height - (scaled_waypoints[:, 0].max() - scaled_waypoints[:, 0].min())) / 2
+        shift_y = (board_width - (scaled_waypoints[:, 1].max() - scaled_waypoints[:, 1].min())) / 2
+        offset_x = board_origin[0] + shift_x
+        offset_y = board_origin[1] + shift_y
         scaled_waypoints[:, 0] += offset_x
         scaled_waypoints[:, 1] += offset_y
         breakpoint()

@@ -106,7 +106,8 @@ class LinearTrajectory(Trajectory):
 
         Returns
         -------
-        6x' :obj:`numpy.ndarray`
+        6x' :obj:`numpy.nd)*sign
+array`
             desired body-frame velocity of the end effector
         """
         if time <= self.total_time / 2.0:
@@ -237,6 +238,14 @@ class ImageTrajectory(Trajectory):
         start = self.waypoints[segment_index]
         end = self.waypoints[segment_index + 1]
         vel = (end - start) / self.segment_time
+
+        # #setting max velocity threshhold
+        # for v in [0, 1, 2]:
+        #     sign = 1
+        #     if vel[v] < 0:
+        #         sign = -1
+        #     vel[v] = min(abs(vel[v]), 0.03)*sign
+
         return np.hstack((vel, np.zeros(3)))
 
 """ 

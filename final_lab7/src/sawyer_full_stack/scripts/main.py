@@ -183,9 +183,10 @@ def get_trajectory(limb, kin, ik_solver, tag_pos, args):
     print(f'bottom_left: ', bottom_left)
 
     plane_origin = bottom_left
-    x_bound = abs(bottom_right[0] - bottom_left[0])
-    y_bound = abs(top_left[1] - bottom_left[1])
-
+    #indexing has to be switched to be rel to base frame axes
+    y_bound = abs(bottom_right[1] - bottom_left[1])
+    x_bound = abs(top_left[0] - bottom_left[0])
+    breakpoint()
 
     print(plane_origin, x_bound, y_bound)
 
