@@ -218,9 +218,13 @@ class ImageTrajectory(Trajectory):
         self.segment_time = total_time / (len(waypoints) - 1)
         self.desired_orientation = np.array([0, 1, 0, 0])
 
+    #TODO Double check this
     def target_pose(self, time):
         segment_index = int(time // self.segment_time)
+
+        #If the index reached or is beyond the final waypoint, return the final waypoint.
         if segment_index >= len(self.waypoints) - 1:
+            print("Final waypoint reached.")
             return np.hstack((self.waypoints[-1], [0, 1, 0, 0]))
 
         start = self.waypoints[segment_index]
