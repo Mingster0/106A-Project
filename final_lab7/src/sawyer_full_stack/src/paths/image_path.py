@@ -31,7 +31,7 @@ class ImagePath():
             w[1] = -1*temp_x
             w[0] = temp_y
         return np.array(all_points)
-
+        
     def load_svg(self, file_path):
         """Load paths from an SVG file."""
         paths, _ = svg2paths(file_path)
