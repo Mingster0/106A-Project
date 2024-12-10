@@ -233,7 +233,6 @@ class ImageTrajectory(Trajectory):
         self.x_spline = make_interp_spline(np.linspace(0, 1, len(x_points)), x_points, k=3, bc_type='clamped')
         self.y_spline = make_interp_spline(np.linspace(0, 1, len(y_points)), y_points, k=3, bc_type='clamped')
 
-        
     #TODO Double check this
     def target_pose(self, time):
         segment_index = int(time // self.segment_time)
@@ -265,7 +264,9 @@ class ImageTrajectory(Trajectory):
         """
         x_vel = self.x_spline.derivative()(time / self.total_time)
         y_vel = self.y_spline.derivative()(time / self.total_time)
-
+        
+        #TODO: include a condition for NaN or infinity velocities
+        
         vel = np.array([x_vel, y_vel, 0])
         """ 
         Linear Approximation Method: 
