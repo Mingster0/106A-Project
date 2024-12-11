@@ -16,7 +16,7 @@ class Trajectory:
     def target_velocity(self, time):
         pass
 
-    def display_trajectory(self, num_waypoints=67, show_animation=False, save_animation=False):
+    def display_trajectory(self, num_waypoints, show_animation=False, save_animation=False):
         trajectory_name = self.__class__.__name__
         times = np.linspace(0, self.total_time, num=num_waypoints)
         target_positions = np.vstack([self.target_pose(t)[:3] for t in times])
@@ -237,22 +237,22 @@ class ImageTrajectory(Trajectory):
     def target_pose(self, time):
         segment_index = int(time // self.segment_time)
         #If the index reached or is beyond the final waypoint, return the final waypoint.
-        """
+        
         if segment_index >= len(self.waypoints) - 1:
             print("Final waypoint reached.")
             return np.hstack((self.waypoints[-1], [0, 1, 0, 0]))
 
-        pos = np.array([self.x_spline(time/self.total_time), self.y_spline(time / self.total_time), self.waypoints[0, 2]])
-        
-        """
+    
+        # pos = np.array([self.x_spline(time / self.total_time), self.y_spline(time / self.total_time), self.waypoints[0, 2]])
+
         # Linear Approximation Method:
 
-        
         start = self.waypoints[segment_index]
         end = self.waypoints[segment_index + 1]
         local_time = time % self.segment_time
         alpha = local_time / self.segment_time
         pos = (1 - alpha) * start + alpha * end
+        
         return np.hstack((pos, self.desired_orientation))
     
 
@@ -263,14 +263,11 @@ class ImageTrajectory(Trajectory):
         x_spline = x spline function with normalized t interval, 0 -> 1
         y_spline = y spline function with normalized t interval, 0 -> 1
         """
-        # x_vel = self.x_spline.derivative()(time / self.total_time) / self.total_time
-        # y_vel = self.y_spline.derivative()(time / self.total_time) / self.total_time
+        # x_vel = self.x_spline.derivative()(time / self.total_time)
+        # y_vel = self.y_spline.derivative()(time / self.total_time)
         
         # time_int = self.total_time / len(self.waypoints)
-        # x_pos_start = self.x_spline(time / self.total_time)
-        # x_pos_end = self.x_spline(time / self.total_time + time_int)
-        # y_pos_start = self.y_spline(time / self.total_time)
-        # y_pos_end = self.y_spline(time / self.total_time + time_int)
+
 
 
 
@@ -289,22 +286,24 @@ class ImageTrajectory(Trajectory):
         end = self.waypoints[segment_index + 1]
         vel = (end - start) / self.segment_time
 
+        # if (time / self.total_time) > 1:
+        #     breakpoint()
+        #     print("final waypoint reached.")
+        #     return np.zeros(6)        # if (time / self.total_time) > 1:
+        #     breakpoint()
+        #     print("final waypoint reached.")
+        #     return np.zeros(6)
 
+        # x_vel = (x_pos_end - x_pos_start) / self.total_time
+        # y_vel = (y_pos_end - y_pos_start) / self.total_time
+        # vel = np.array([x_vel, y_vel, 0])
+
+        
         if abs(vel[0]) > 0.2 or abs(vel[1]) > 0.2:
             print("OUTLIER VEL: ", vel)
             vel = self.prev_vel
 
-        
         self.prev_vel = vel
-
-    
-        # #setting max velocity threshhold
-        # for v in [0, 1, 2]:
-        #     sign = 1
-        #     if vel[v] < 0:
-        #         sign = -1
-        #     vel[v] = min(abs(vel[v]), 0.03)*sign
-
 
         return np.hstack((vel, np.zeros(3)))
 

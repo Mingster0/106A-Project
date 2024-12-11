@@ -29,6 +29,7 @@ class ImagePath():
             temp_y = w[1]
             w[1] = -1*temp_x
             w[0] = temp_y
+
         return np.array(all_points)
         
     def load_svg(self, file_path):
@@ -149,10 +150,43 @@ board_origin
 
         # Compute scaling factor
         scale_factor = min(board_height / svg_rel_height, board_width / svg_rel_width)
-        scale_factor = 0.0001
-        breakpoint()
+        scale_factor = 0.0005
+        
         #TODO: rescale correctly
         # Scale waypoints
+        # scaled_waypoints = waypoints.copy()
+        # # Subtract min_x, min_y to offset any potential negative values.
+        # scaled_waypoints[:, 0] = (waypoints[:, 0] - min_x) * scale_factor
+        # scaled_waypoints[:, 1] = (waypoints[:, 1] - min_y) * scale_factor
+        # scaled_waypoints[:, 2] = board_origin[2] #1 cm above surface
+                
+        # #SMOOTHING BY ADDING MORE WAYPOINTS
+        #  # Add intermediate waypoints between disconnected lines
+        # smooth_points = np.array([scaled_waypoints[0]])  # Start with the first point
+        # for i in range(1, len(scaled_waypoints)):
+        #     prev_point = scaled_waypoints[i - 1][2]
+        #     curr_point = scaled_waypoints[i][2]
+
+        #     distance = np.linalg.norm(curr_point - prev_point)
+        #     if distance > 0.01:  # Threshold for detecting disconnected lines
+        #         # Generate intermediate waypoints
+        #         num_intermediates = max(int(distance / 0.01), 2)
+        #         for t in np.linspace(0, 1, num_intermediates, endpoint=False):
+        #             intermediate_point = prev_point + t * (curr_point - prev_point)
+        #             np.append(smooth_points, ([intermediate_point[0], intermediate_point[1], 0]))
+
+        # # Add the current point after adding intermediates
+        # np.append(smooth_points, scaled_waypoints[i])
+
+        # # Center the waypoints on the board
+        # #note: x is the height of the image, y refers to width of image direction
+        # shift_h = (board_height - ( smooth_points[:, 0].max() -  smooth_points[:, 0].min())) / 2
+        # shift_w = (board_width - ( smooth_points[:, 1].max() -  smooth_points[:, 1].min())) / 2
+        # offset_x = board_origin[0] + shift_h
+        # offset_y = board_origin[1] - shift_w
+        # smooth_points[:, 0] += offset_x
+        # smooth_points[:, 1] += offset_y
+
         scaled_waypoints = waypoints.copy()
         # Subtract min_x, min_y to offset any potential negative values.
         scaled_waypoints[:, 0] = (waypoints[:, 0] - min_x) * scale_factor
@@ -161,11 +195,11 @@ board_origin
 
         # Center the waypoints on the board
         #note: x is the height of the image, y refers to width of image direction
-        shift_h = (board_height - (scaled_waypoints[:, 0].max() - scaled_waypoints[:, 0].min())) / 2
-        shift_w = (board_width - (scaled_waypoints[:, 1].max() - scaled_waypoints[:, 1].min())) / 2
+        shift_h = (board_height - (scaled_waypoints[:, 0].max() - scaled_waypoints[:, 0].min()) / 2)
+        shift_w = (board_width - (scaled_waypoints[:, 1].max() - scaled_waypoints[:, 1].min()) / 2)
         offset_x = board_origin[0] + shift_h
         offset_y = board_origin[1] - shift_w
         scaled_waypoints[:, 0] += offset_x
         scaled_waypoints[:, 1] += offset_y
-        breakpoint()
-        return scaled_waypoints
+
+        return  scaled_waypoints

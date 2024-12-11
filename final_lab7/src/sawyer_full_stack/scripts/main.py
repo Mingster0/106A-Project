@@ -204,17 +204,18 @@ def get_trajectory(limb, kin, ik_solver, tag_pos, args):
         trajectory = CircularTrajectory(center_position=target_pos, radius=0.1, total_time=20)
     elif task == 'image':
         target_pos = bottom_left
-        total_time = 60
+        total_time = 40
         print("DETECTED BOTTOM LEFT:", target_pos)
 
         img = ImagePath(args.img)
         waypoints = img.parse_svg_to_waypoints(num_way)
         plane_origin[2] += + 0.01 # moves to a Z position 1 cm above the AR tag.
+        breakpoint()
         #TODO FIX SCALE AND CENTER FUNCTION
         scaled_waypoints = img.scale_and_center_waypoints(waypoints, plane_origin, h_bound, w_bound) 
 
         trajectory = ImageTrajectory(scaled_waypoints, total_time)
-        trajectory.display_trajectory()
+        trajectory.display_trajectory(num_way)
     else:
         raise ValueError('task {} not recognized'.format(task))
     
