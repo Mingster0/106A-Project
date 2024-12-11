@@ -184,11 +184,10 @@ def get_trajectory(limb, kin, ik_solver, tag_pos, args):
 
     plane_origin = bottom_left
     #indexing has to be switched to be rel to base frame axes
-    y_bound = abs(bottom_right[1] - bottom_left[1])
-    x_bound = abs(top_left[0] - bottom_left[0])
-    breakpoint()
+    w_bound = abs(bottom_right[1] - bottom_left[1])
+    h_bound = abs(top_left[0] - bottom_left[0])
 
-    print(plane_origin, x_bound, y_bound)
+    print("AR Tag Bounds: ", "Width ", w_bound, "Height: ", h_bound)
 
     current_position = np.array([getattr(trans.transform.translation, dim) for dim in ('x', 'y', 'z')])
     print("Current Position:", current_position)
@@ -204,22 +203,21 @@ def get_trajectory(limb, kin, ik_solver, tag_pos, args):
         print("TARGET POSITION:", target_pos)
         trajectory = CircularTrajectory(center_position=target_pos, radius=0.1, total_time=20)
     elif task == 'image':
-        #TODO fact check this section
+        target_pos = bottom_left
+        total_time = 60
+        print("DETECTED BOTTOM LEFT:", target_pos)
 
-        target_pos = tag_pos[0]
-        target_pos[2] += 0.4 #linear path moves to a Z position above AR Tag.
-        print("TARGET POSITION:", target_pos)
-        img = ImagePath(10, args.img)
-        waypoints = img.parse_svg_to_waypoints()
-        scaled_waypoints = img.scale_and_center_waypoints(waypoints, plane_origin, x_bound, y_bound) #have to check if this works
-        trajectory = ImageTrajectory(scaled_waypoints, total_time=30)
+        img = ImagePath(args.img)
+        waypoints = img.parse_svg_to_waypoints(num_way)
+        plane_origin[2] += + 0.01 # moves to a Z position 1 cm above the AR tag.
+        #TODO FIX SCALE AND CENTER FUNCTION
+        scaled_waypoints = img.scale_and_center_waypoints(waypoints, plane_origin, h_bound, w_bound) 
+
+        trajectory = ImageTrajectory(scaled_waypoints, total_time)
         trajectory.display_trajectory()
-
-        #CHECKED UP TO HERE AS OF 12/06/24
     else:
         raise ValueError('task {} not recognized'.format(task))
     
-    #TODO: resolve this error (how to return a path, given the Image trajectory)
     path = MotionPath(limb, kin, ik_solver, trajectory)
     return path.to_robot_trajectory(num_way, True)
 
@@ -277,7 +275,7 @@ def main():
         """after how many seconds should the controller terminate if it hasn\'t already.  
         Default: None"""
     )
-    parser.add_argument('-num_way', type=int, default=50, help=
+    parser.add_argument('-num_way', type=int, default=300, help=
         'How many waypoints for the :obj:`moveit_msgs.msg.RobotTrajectory`.  Default: 300'
     )
     parser.add_argument('-img', type=str, default=None, help="path to SVG file.")

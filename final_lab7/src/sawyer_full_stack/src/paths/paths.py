@@ -40,7 +40,7 @@ class MotionPath:
         self.trajectory = trajectory
         self.previous_computed_ik = get_joint_positions(self.limb)
 
-    def to_robot_trajectory(self, num_waypoints=300, jointspace=True, extra_points = 10):
+    def to_robot_trajectory(self, num_waypoints=1500, jointspace=True, extra_points = 10):
         """
         Parameters
         ----------
@@ -163,5 +163,6 @@ class MotionPath:
         else:
             point.positions = self.trajectory.target_pose(t)
             point.velocities = self.trajectory.target_velocity(t)
+            
         point.time_from_start = rospy.Duration.from_sec(t)
         return point

@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from mpl_toolkits.mplot3d import Axes3D
 from svgpathtools import svg2paths
+import numpy as np
+from scipy.interpolate import make_interp_spline
 
 class Trajectory:
     def __init__(self, total_time):
@@ -217,20 +219,68 @@ class ImageTrajectory(Trajectory):
         self.total_time = total_time
         self.segment_time = total_time / (len(waypoints) - 1)
         self.desired_orientation = np.array([0, 1, 0, 0])
+        self.prev_vel = np.zeros(3)
+        # Getting the Bezier Curve of x(t) and y(t) for a smoothed path. 
+        x_points, y_points = waypoints[:, 0], waypoints[:, 1]
+        
+        # Time vector for sampling
+        time = np.linspace(0, total_time, len(waypoints) - 1)
+        
+        # Interpolating X and Y separately using B-Splines
+        x_points, y_points = waypoints[:, 0], waypoints[:, 1]
 
+        # bc_type ensures a fixed start and end velocity, no extraneous jumps
+        self.x_spline = make_interp_spline(np.linspace(0, 1, len(x_points)), x_points, k=3, bc_type='clamped')
+        self.y_spline = make_interp_spline(np.linspace(0, 1, len(y_points)), y_points, k=3, bc_type='clamped')
+
+    #TODO Double check this
     def target_pose(self, time):
         segment_index = int(time // self.segment_time)
+        #If the index reached or is beyond the final waypoint, return the final waypoint.
+        """
         if segment_index >= len(self.waypoints) - 1:
+            print("Final waypoint reached.")
             return np.hstack((self.waypoints[-1], [0, 1, 0, 0]))
 
+        pos = np.array([self.x_spline(time/self.total_time), self.y_spline(time / self.total_time), self.waypoints[0, 2]])
+        
+        """
+        # Linear Approximation Method:
+
+        
         start = self.waypoints[segment_index]
         end = self.waypoints[segment_index + 1]
         local_time = time % self.segment_time
         alpha = local_time / self.segment_time
         pos = (1 - alpha) * start + alpha * end
         return np.hstack((pos, self.desired_orientation))
+    
+
 
     def target_velocity(self, time):
+        """
+        time = current time point
+        x_spline = x spline function with normalized t interval, 0 -> 1
+        y_spline = y spline function with normalized t interval, 0 -> 1
+        """
+        # x_vel = self.x_spline.derivative()(time / self.total_time) / self.total_time
+        # y_vel = self.y_spline.derivative()(time / self.total_time) / self.total_time
+        
+        # time_int = self.total_time / len(self.waypoints)
+        # x_pos_start = self.x_spline(time / self.total_time)
+        # x_pos_end = self.x_spline(time / self.total_time + time_int)
+        # y_pos_start = self.y_spline(time / self.total_time)
+        # y_pos_end = self.y_spline(time / self.total_time + time_int)
+
+
+
+        #TODO: include a condition for NaN or infinity velocities
+        
+        # vel = np.array([x_vel, y_vel, 0])
+        # if any(abs(vel)) > 0.2:
+        #     vel = self.prev_vel
+    
+        # Linear Approximation Method: 
         segment_index = int(time // self.segment_time)
         if segment_index >= len(self.waypoints) - 1:
             return np.zeros(6)
@@ -239,12 +289,22 @@ class ImageTrajectory(Trajectory):
         end = self.waypoints[segment_index + 1]
         vel = (end - start) / self.segment_time
 
+
+        if abs(vel[0]) > 0.2 or abs(vel[1]) > 0.2:
+            print("OUTLIER VEL: ", vel)
+            vel = self.prev_vel
+
+        
+        self.prev_vel = vel
+
+    
         # #setting max velocity threshhold
         # for v in [0, 1, 2]:
         #     sign = 1
         #     if vel[v] < 0:
         #         sign = -1
         #     vel[v] = min(abs(vel[v]), 0.03)*sign
+
 
         return np.hstack((vel, np.zeros(3)))
 
