@@ -15,7 +15,7 @@ class ImagePath():
 
     
     def parse_svg_to_waypoints(self, num_waypoints):
-        #returns a np.array of waypoints, all you need so far for linear approximation method
+        # returns a np.array of waypoints, all you need so far for linear approximation method
         paths, _ = svg2paths(self.file_path)
         all_points = []
 
@@ -23,14 +23,37 @@ class ImagePath():
             for i in np.linspace(0, 1, num_waypoints // len(paths)):
                 point = path.point(i)
                 all_points.append([point.real, point.imag, 0])  # Z height doesn't matter here bc it eventually gets overidden
+       
+        """
+        Parse an SVG file and generate waypoints for the robot.
+        
+        :param svg_file: Path to the SVG file.
+        :param num_waypoints: Total number of waypoints to generate.
+        :return: List of (x, y) waypoints.
+        """
+        # # Load paths from the SVG
+        # paths, _ = svg2paths(self.file_path)
+        
+        # waypoints = []
+        # for path in paths:
+        #     length = path.length()
+        #     num_segments = int(num_waypoints / len(paths))  # Divide waypoints among paths
+        #     for i in range(num_segments):
+        #         t = i / num_segments  # Normalize t value
+        #         point = path.point(t * length)
+        #         waypoints.append((point.real, point.imag)
+
         # Rotating SVG image to match base frame
         for w in all_points:
             temp_x = w[0]
             temp_y = w[1]
             w[1] = -1*temp_x
             w[0] = temp_y
+        
 
         return np.array(all_points)
+
+        # return np.array(waypoints)
         
     def load_svg(self, file_path):
         """Load paths from an SVG file."""
@@ -135,7 +158,7 @@ class ImagePath():
             Width of the board in meters.
         board_height : float
             Height of the board in meters.
-board_origin
+        board_origin
         Returns
         -------
         numpy.ndarray
@@ -150,7 +173,6 @@ board_origin
 
         # Compute scaling factor
         scale_factor = min(board_height / svg_rel_height, board_width / svg_rel_width)
-        scale_factor = 0.0005
         
         #TODO: rescale correctly
         # Scale waypoints
@@ -195,11 +217,14 @@ board_origin
 
         # Center the waypoints on the board
         #note: x is the height of the image, y refers to width of image direction
-        shift_h = (board_height - (scaled_waypoints[:, 0].max() - scaled_waypoints[:, 0].min()) / 2)
-        shift_w = (board_width - (scaled_waypoints[:, 1].max() - scaled_waypoints[:, 1].min()) / 2)
-        offset_x = board_origin[0] + shift_h
-        offset_y = board_origin[1] - shift_w
+        shift_h = (board_height - (scaled_waypoints[:, 0].max() - scaled_waypoints[:, 0].min())) / 2
+        print("Vertical shift: ", shift_h)
+        shift_w = (board_width - (scaled_waypoints[:, 1].max() - scaled_waypoints[:, 1].min())) / 2
+        print("Horizontal Shift: ", shift_w)
+        breakpoint()
+        offset_x = board_origin[0] + abs(shift_h)
+        offset_y = board_origin[1] + abs(shift_w)
         scaled_waypoints[:, 0] += offset_x
-        scaled_waypoints[:, 1] += offset_y
+        scaled_waypoints[:, 1] -= offset_y
 
         return  scaled_waypoints
