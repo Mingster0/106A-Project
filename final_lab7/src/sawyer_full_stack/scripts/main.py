@@ -28,6 +28,7 @@ from moveit_msgs.msg import DisplayTrajectory, RobotState
 from sawyer_pykdl import sawyer_kinematics
 from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Point
+import image_preprocessing
 
 # Terminal Notes
 # python main.py -task line -ar_marker 3 2 8 -img nike_logo.svg --log
@@ -212,7 +213,9 @@ def get_trajectory(limb, kin, ik_solver, tag_pos, args):
         total_time = 40
         print("DETECTED BOTTOM LEFT:", target_pos)
 
-        img = ImagePath(args.img)
+        processed_svg = image_preprocessing(args.img)
+
+        img = ImagePath(processed_svg)
         waypoints = img.parse_svg_to_waypoints(num_way)
         plane_origin[2] += + 0.01 # moves to a Z position 1 cm above the AR tag.
         breakpoint()
