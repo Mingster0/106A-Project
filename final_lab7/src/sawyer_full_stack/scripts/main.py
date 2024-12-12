@@ -8,6 +8,7 @@ import argparse
 import numpy as np
 import rospkg
 import roslaunch
+import image_preprocessing
 
 from paths.trajectories import LinearTrajectory, CircularTrajectory, ImageTrajectory
 from paths.paths import MotionPath
@@ -209,12 +210,16 @@ def get_trajectory(limb, kin, ik_solver, tag_pos, args):
         trajectory = CircularTrajectory(center_position=target_pos, radius=0.1, total_time=20)
     elif task == 'image':
         target_pos = bottom_left
-        total_time = 40
+        total_time = 60
         print("DETECTED BOTTOM LEFT:", target_pos)
 
-        img = ImagePath(args.img)
+
+        processed_svg = image_preprocessing.main(args.img)
+
+        img = ImagePath(processed_svg)
+        
         waypoints = img.parse_svg_to_waypoints(num_way)
-        plane_origin[2] += + 0.01 # moves to a Z position 1 cm above the AR tag.
+        plane_origin[2] += + 0.05 # moves to a Z position 1 cm above the AR tag.
         breakpoint()
         #TODO FIX SCALE AND CENTER FUNCTION
         scaled_waypoints = img.scale_and_center_waypoints(waypoints, plane_origin, h_bound, w_bound) 

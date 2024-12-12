@@ -220,18 +220,6 @@ class ImageTrajectory(Trajectory):
         self.segment_time = total_time / (len(waypoints) - 1)
         self.desired_orientation = np.array([0, 1, 0, 0])
         self.prev_vel = np.zeros(3)
-        # Getting the Bezier Curve of x(t) and y(t) for a smoothed path. 
-        x_points, y_points = waypoints[:, 0], waypoints[:, 1]
-        
-        # Time vector for sampling
-        time = np.linspace(0, total_time, len(waypoints) - 1)
-        
-        # Interpolating X and Y separately using B-Splines
-        x_points, y_points = waypoints[:, 0], waypoints[:, 1]
-
-        # bc_type ensures a fixed start and end velocity, no extraneous jumps
-        self.x_spline = make_interp_spline(np.linspace(0, 1, len(x_points)), x_points, k=3, bc_type='clamped')
-        self.y_spline = make_interp_spline(np.linspace(0, 1, len(y_points)), y_points, k=3, bc_type='clamped')
 
     #TODO Double check this
     def target_pose(self, time):
@@ -241,9 +229,6 @@ class ImageTrajectory(Trajectory):
         if segment_index >= len(self.waypoints) - 1:
             print("Final waypoint reached.")
             return np.hstack((self.waypoints[-1], [0, 1, 0, 0]))
-
-    
-        # pos = np.array([self.x_spline(time / self.total_time), self.y_spline(time / self.total_time), self.waypoints[0, 2]])
 
         # Linear Approximation Method:
 
@@ -285,19 +270,6 @@ class ImageTrajectory(Trajectory):
         start = self.waypoints[segment_index]
         end = self.waypoints[segment_index + 1]
         vel = (end - start) / self.segment_time
-
-        # if (time / self.total_time) > 1:
-        #     breakpoint()
-        #     print("final waypoint reached.")
-        #     return np.zeros(6)        # if (time / self.total_time) > 1:
-        #     breakpoint()
-        #     print("final waypoint reached.")
-        #     return np.zeros(6)
-
-        # x_vel = (x_pos_end - x_pos_start) / self.total_time
-        # y_vel = (y_pos_end - y_pos_start) / self.total_time
-        # vel = np.array([x_vel, y_vel, 0])
-
         
         if abs(vel[0]) > 0.2 or abs(vel[1]) > 0.2:
             print("OUTLIER VEL: ", vel)
@@ -307,23 +279,6 @@ class ImageTrajectory(Trajectory):
 
         return np.hstack((vel, np.zeros(3)))
 
-""" 
-CODE FOR TESTING ImageTrajectory GENERATION:
-def parse_svg_to_waypoints(svg_file, num_waypoints=150):
-    paths, _ = svg2paths(svg_file)
-    all_points = []
-
-    for path in paths:
-        for i in np.linspace(0, 1, num_waypoints // len(paths)):
-            point = path.point(i)
-            all_points.append([point.real, point.imag, 0])  # Add z=0 for 2D shapes
-
-    return np.array(all_points)
-
-def create_trajectory_from_svg(svg_file, total_time):
-    waypoints = parse_svg_to_waypoints(svg_file)
-    trajectory = ImageTrajectory(waypoints, total_time)
-    return trajectory """
 if __name__ == '__main__':
     """
     Run this file to visualize plots of your paths. Note: the provided function
