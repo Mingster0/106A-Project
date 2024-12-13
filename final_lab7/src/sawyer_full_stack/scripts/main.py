@@ -190,8 +190,8 @@ def get_trajectory(limb, kin, ik_solver, tag_pos, args):
     plane_origin[0] += ar_tag_size / 2
     plane_origin[1] -= ar_tag_size / 2
     #indexing has to be switched to be rel to base frame axes
-    w_bound = abs((bottom_right[1] + ar_tag_size) - (bottom_left[1] - ar_tag_size))
-    h_bound = abs((top_left[0] - ar_tag_size / 2) - (bottom_left[0] + ar_tag_size / 2))
+    w_bound = abs((bottom_right[1]) - (bottom_left[1])) - ar_tag_size / 2
+    h_bound = abs((top_left[0]) - (bottom_left[0])) + ar_tag_size / 2 
 
     print("AR Tag Bounds: ", "Width ", w_bound, "Height: ", h_bound)
 
