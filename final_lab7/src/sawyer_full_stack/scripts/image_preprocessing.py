@@ -131,7 +131,7 @@ def save_as_one_continuous_svg(points, output_path="continuous_line.svg"):
     with open(output_path, 'w') as file:
         file.write(svg_content)
 
-def main(input_image):
+def process(input_image):
     try:
        
         # Convert image
@@ -171,6 +171,3 @@ def main(input_image):
     
     except Exception as e:
         print(f"Error converting image: {e}")
-
-if __name__ == '__main__':
-    main()

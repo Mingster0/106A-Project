@@ -200,15 +200,6 @@ class ImagePath():
         # # Add the current point after adding intermediates
         # np.append(smooth_points, scaled_waypoints[i])
 
-        # # Center the waypoints on the board
-        # #note: x is the height of the image, y refers to width of image direction
-        # shift_h = (board_height - ( smooth_points[:, 0].max() -  smooth_points[:, 0].min())) / 2
-        # shift_w = (board_width - ( smooth_points[:, 1].max() -  smooth_points[:, 1].min())) / 2
-        # offset_x = board_origin[0] + shift_h
-        # offset_y = board_origin[1] - shift_w
-        # smooth_points[:, 0] += offset_x
-        # smooth_points[:, 1] += offset_y
-
         scaled_waypoints = waypoints.copy()
         # Subtract min_x, min_y to offset any potential negative values.
         scaled_waypoints[:, 0] = (waypoints[:, 0] - min_x) * scale_factor
@@ -221,10 +212,11 @@ class ImagePath():
         print("Vertical shift: ", shift_h)
         shift_w = (board_width - (scaled_waypoints[:, 1].max() - scaled_waypoints[:, 1].min())) / 2
         print("Horizontal Shift: ", shift_w)
-        breakpoint()
         offset_x = board_origin[0] + abs(shift_h)
         offset_y = board_origin[1] + abs(shift_w)
         scaled_waypoints[:, 0] += offset_x
         scaled_waypoints[:, 1] -= offset_y
+
+        breakpoint()
 
         return  scaled_waypoints

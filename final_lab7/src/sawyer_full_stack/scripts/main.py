@@ -187,11 +187,11 @@ def get_trajectory(limb, kin, ik_solver, tag_pos, args):
 
     # Moving 4 cm inwards to clear AR tag
     ar_tag_size = 0.08
-    plane_origin[0] += ar_tag_size/2
-    plane_origin[1] -= ar_tag_size /2
+    plane_origin[0] += ar_tag_size / 2
+    plane_origin[1] -= ar_tag_size / 2
     #indexing has to be switched to be rel to base frame axes
-    w_bound = abs(bottom_right[1] - bottom_left[1]) - ar_tag_size /2
-    h_bound = abs(top_left[0] - bottom_left[0]) - ar_tag_size /2
+    w_bound = abs((bottom_right[1] + ar_tag_size / 4) - (bottom_left[1] - ar_tag_size / 4))
+    h_bound = abs((top_left[0] - ar_tag_size / 2) - (bottom_left[0] + ar_tag_size / 2))
 
     print("AR Tag Bounds: ", "Width ", w_bound, "Height: ", h_bound)
 
@@ -214,13 +214,12 @@ def get_trajectory(limb, kin, ik_solver, tag_pos, args):
         print("DETECTED BOTTOM LEFT:", target_pos)
 
 
-        processed_svg = image_preprocessing.main(args.img)
+        processed_svg = image_preprocessing.process(args.img)
 
         img = ImagePath(processed_svg)
-        
         waypoints = img.parse_svg_to_waypoints(num_way)
-        plane_origin[2] += + 0.05 # moves to a Z position 1 cm above the AR tag.
-        breakpoint()
+        plane_origin[2] += + 0.035 # moves to a Z position 1 cm above the AR tag.
+        # 0.05 previously
         #TODO FIX SCALE AND CENTER FUNCTION
         scaled_waypoints = img.scale_and_center_waypoints(waypoints, plane_origin, h_bound, w_bound) 
 
@@ -318,6 +317,7 @@ def main():
    
 
     tag_pos = [lookup_tag(marker) for marker in args.ar_marker]
+
 
     # Get an appropriate RobotTrajectory for the task (circular, linear, or square)
     # If the controller is a workspace controller, this should return a trajectory where the
